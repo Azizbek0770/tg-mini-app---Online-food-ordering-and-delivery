@@ -129,3 +129,24 @@ The application is designed for deployment on Replit with the following consider
    - Integrated development server with Vite middleware
 
 The architecture prioritizes type safety, developer experience, and scalability while maintaining simplicity for a food ordering application that works seamlessly as both a Telegram Mini App and a standalone web application.
+
+## Recent Changes
+
+### January 19, 2025 - Telegram Bot Integration Complete
+- Successfully integrated comprehensive Telegram bot functionality using grammY framework
+- Created Telegram Mini App with WebApp API integration at `/mini` route
+- Added telegram-specific order placement API endpoint (`/api/orders/telegram`)
+- Enhanced cart system with haptic feedback and theme detection for Telegram users
+- Implemented automatic user authentication for Telegram users via initDataUnsafe
+- Created complete menu with categories and items: Burgers, Drinks, Combos, Sides (10 total items)
+- Set up bot commands: /start, /menu, /orders with inline keyboard navigation
+- Added order confirmation messaging back to Telegram bot via web_app_data
+- Bot successfully running as @ikromsh_uz_bot with fully functional Mini App interface
+
+### Technical Implementation Details
+- **Server**: Express.js with integrated Telegram bot using grammY
+- **Bot Framework**: grammY with session management for cart persistence
+- **Database**: PostgreSQL with Telegram user storage and order tracking
+- **Frontend**: React with Telegram WebApp API integration for theme/user detection
+- **Order Flow**: Telegram Bot → Mini App WebView → Database → Bot confirmation message
+- **Authentication**: Dual system supporting both Replit Auth and Telegram user authentication

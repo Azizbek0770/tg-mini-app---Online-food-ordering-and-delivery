@@ -41,12 +41,35 @@ export default function Checkout() {
         })),
       };
 
-      const response = await apiRequest("POST", "/api/orders", orderData);
-      return response.json();
+      // Check if we're in Telegram WebApp
+      if (telegram.isAvailable()) {
+        const telegramUser = telegram.getUser();
+        const telegramOrderData = {
+          userId: telegramUser?.id.toString(),
+          items: orderData.items,
+          customerNotes: customerNotes.trim() || null,
+          telegramChatId: telegramUser?.id.toString(),
+        };
+        
+        const response = await apiRequest("POST", "/api/orders/telegram", telegramOrderData);
+        return response.json();
+      } else {
+        const response = await apiRequest("POST", "/api/orders", orderData);
+        return response.json();
+      }
     },
     onSuccess: (order) => {
-      setOrderNumber(order.orderNumber);
+      setOrderNumber(order.order?.orderNumber || order.orderNumber);
       setIsOrderPlaced(true);
+      
+      // Send order confirmation to Telegram bot if in WebApp
+      if (telegram.isAvailable()) {
+        telegram.sendData({
+          type: 'order_placed',
+          orderNumber: order.order?.orderNumber || order.orderNumber,
+        });
+        telegram.hapticFeedback('success');
+      }
       clearCart();
       
       // Haptic feedback

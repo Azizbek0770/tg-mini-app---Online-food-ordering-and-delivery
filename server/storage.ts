@@ -29,6 +29,7 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getOrdersByUserId(userId: string): Promise<Order[]>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -48,7 +49,7 @@ export interface IStorage {
   getOrders(status?: string): Promise<(Order & { user: User | null; items: (OrderItem & { menuItem: MenuItem | null })[] })[]>;
   getOrderById(id: number): Promise<(Order & { user: User | null; items: (OrderItem & { menuItem: MenuItem | null })[] }) | undefined>;
   getOrdersByUser(userId: string): Promise<Order[]>;
-  createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order>;
+  createOrder(order: InsertOrder, items?: InsertOrderItem[]): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
   
   // Staff operations
@@ -92,6 +93,11 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async getOrdersByUserId(userId: string): Promise<Order[]> {
+    const userOrders = await db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+    return userOrders;
   }
 
   // Category operations
@@ -272,15 +278,17 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
   }
 
-  async createOrder(order: InsertOrder, items: InsertOrderItem[]): Promise<Order> {
+  async createOrder(order: InsertOrder, items?: InsertOrderItem[]): Promise<Order> {
     const [newOrder] = await db.insert(orders).values(order).returning();
     
-    const orderItemsWithOrderId = items.map(item => ({
-      ...item,
-      orderId: newOrder.id,
-    }));
-    
-    await db.insert(orderItems).values(orderItemsWithOrderId);
+    if (items && items.length > 0) {
+      const orderItemsWithOrderId = items.map(item => ({
+        ...item,
+        orderId: newOrder.id,
+      }));
+      
+      await db.insert(orderItems).values(orderItemsWithOrderId);
+    }
     
     return newOrder;
   }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { MenuItem } from '@shared/schema';
+import { telegram } from '@/lib/telegram';
 
 export interface CartItem {
   id: number;
@@ -34,6 +35,9 @@ export const useCart = create<CartState>()(
           const existingItem = state.items.find(item => item.menuItem.id === menuItem.id);
           
           if (existingItem) {
+            // Telegram haptic feedback for adding items
+            telegram.hapticFeedback('light');
+            
             return {
               items: state.items.map(item =>
                 item.menuItem.id === menuItem.id
@@ -46,6 +50,9 @@ export const useCart = create<CartState>()(
               ),
             };
           }
+
+          // Telegram haptic feedback for adding new items
+          telegram.hapticFeedback('medium');
 
           return {
             items: [...state.items, {

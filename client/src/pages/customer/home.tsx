@@ -25,6 +25,13 @@ export default function CustomerHome() {
       // Set theme based on Telegram
       const telegramTheme = telegram.getTheme();
       document.documentElement.classList.toggle('dark', telegramTheme === 'dark');
+      
+      // Auto-authenticate Telegram user
+      const telegramUser = telegram.getUser();
+      if (telegramUser) {
+        // Store telegram user in localStorage for cart context
+        localStorage.setItem('telegram_user', JSON.stringify(telegramUser));
+      }
     }
   }, []);
 

@@ -28,6 +28,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Telegram-specific user auth (for mini app)
+  app.post('/api/auth/telegram', async (req, res) => {
+    try {
+      const { telegramUser } = req.body;
+      
+      if (!telegramUser || !telegramUser.id) {
+        return res.status(400).json({ message: "Invalid Telegram user data" });
+      }
+
+      const user = await storage.upsertUser({
+        id: telegramUser.id.toString(),
+        telegramUserId: telegramUser.id.toString(),
+        telegramUsername: telegramUser.username,
+        firstName: telegramUser.first_name,
+        lastName: telegramUser.last_name,
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error authenticating Telegram user:", error);
+      res.status(500).json({ message: "Failed to authenticate user" });
+    }
+  });
+
   // Category routes
   app.get('/api/categories', async (req, res) => {
     try {
@@ -211,6 +235,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(newOrder);
     } catch (error) {
       console.error("Error creating order:", error);
+      res.status(500).json({ message: "Failed to create order" });
+    }
+  });
+
+  // Telegram order creation (no auth required)
+  app.post('/api/orders/telegram', async (req, res) => {
+    try {
+      const { userId, items, customerNotes, telegramChatId } = req.body;
+      
+      if (!userId || !items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Invalid order data" });
+      }
+
+      // Calculate totals
+      let subtotal = 0;
+      const orderItems = [];
+      
+      for (const item of items) {
+        const menuItem = await storage.getMenuItemById(item.menuItemId);
+        if (!menuItem) {
+          return res.status(400).json({ message: `Menu item ${item.menuItemId} not found` });
+        }
+        subtotal += parseFloat(menuItem.price) * item.quantity;
+        orderItems.push({
+          menuItemId: item.menuItemId,
+          quantity: item.quantity,
+          price: menuItem.price,
+          specialInstructions: item.specialInstructions,
+        });
+      }
+
+      const deliveryFee = subtotal >= 25 ? 0 : 2.99;
+      const total = subtotal + deliveryFee;
+
+      // Generate order number
+      const orderNumber = `DK${Date.now().toString().slice(-6)}`;
+
+      // Create order
+      const orderData = {
+        userId,
+        orderNumber,
+        status: 'pending',
+        subtotal: subtotal.toFixed(2),
+        deliveryFee: deliveryFee.toFixed(2),
+        total: total.toFixed(2),
+        customerNotes,
+        telegramChatId,
+      };
+
+      const order = await storage.createOrder(orderData, orderItems);
+      
+      res.json({ 
+        success: true, 
+        order: { 
+          ...order, 
+          orderNumber: order.orderNumber 
+        } 
+      });
+    } catch (error) {
+      console.error("Error creating Telegram order:", error);
       res.status(500).json({ message: "Failed to create order" });
     }
   });
