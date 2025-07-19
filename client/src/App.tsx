@@ -21,46 +21,37 @@ import AdminSettings from "@/pages/admin/settings";
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
     <Switch>
-      {!isAuthenticated ? (
+      {/* Public customer routes (Mini App) */}
+      <Route path="/mini" component={CustomerHome} />
+      <Route path="/mini/cart" component={Cart} />
+      <Route path="/mini/checkout" component={Checkout} />
+      
+      {/* Admin routes require authentication */}
+      {isLoading ? (
+        <Route path="/admin*">
+          {() => (
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+          )}
+        </Route>
+      ) : isAuthenticated && user?.isAdmin ? (
         <>
-          <Route path="/" component={Landing} />
-          <Route path="/mini" component={CustomerHome} />
-          <Route path="/mini/cart" component={Cart} />
-          <Route path="/mini/checkout" component={Checkout} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/dashboard" component={AdminDashboard} />
+          <Route path="/admin/orders" component={AdminOrders} />
+          <Route path="/admin/menu" component={AdminMenu} />
+          <Route path="/admin/categories" component={AdminCategories} />
+          <Route path="/admin/users" component={AdminUsers} />
+          <Route path="/admin/staff" component={AdminStaff} />
+          <Route path="/admin/settings" component={AdminSettings} />
         </>
       ) : (
-        <>
-          {/* Customer routes */}
-          <Route path="/" component={CustomerHome} />
-          <Route path="/mini" component={CustomerHome} />
-          <Route path="/mini/cart" component={Cart} />
-          <Route path="/mini/checkout" component={Checkout} />
-          
-          {/* Admin routes - only for admin users */}
-          {user?.isAdmin && (
-            <>
-              <Route path="/admin" component={AdminDashboard} />
-              <Route path="/admin/dashboard" component={AdminDashboard} />
-              <Route path="/admin/orders" component={AdminOrders} />
-              <Route path="/admin/menu" component={AdminMenu} />
-              <Route path="/admin/categories" component={AdminCategories} />
-              <Route path="/admin/users" component={AdminUsers} />
-              <Route path="/admin/staff" component={AdminStaff} />
-              <Route path="/admin/settings" component={AdminSettings} />
-            </>
-          )}
-        </>
+        <Route path="/" component={Landing} />
       )}
+      
       <Route component={NotFound} />
     </Switch>
   );

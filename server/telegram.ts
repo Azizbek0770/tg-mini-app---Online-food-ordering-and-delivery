@@ -97,8 +97,10 @@ bot.command("orders", async (ctx) => {
 
     let message = "📋 Your Recent Orders:\n\n";
     orders.slice(0, 5).forEach((order, index) => {
-      message += `${index + 1}. Order #${order.orderNumber}\n`;
-      message += `   Status: ${order.status}\n`;
+      const statusEmoji = getStatusEmoji(order.status);
+      const statusText = getStatusText(order.status);
+      message += `${statusEmoji} Order #${order.orderNumber}\n`;
+      message += `   Status: ${statusText}\n`;
       message += `   Total: $${order.total}\n`;
       message += `   Date: ${order.createdAt?.toLocaleDateString()}\n\n`;
     });
@@ -109,6 +111,57 @@ bot.command("orders", async (ctx) => {
     ctx.reply("Sorry, I couldn't fetch your orders right now. Please try again later.");
   }
 });
+
+// Status helper functions
+function getStatusEmoji(status: string): string {
+  switch (status) {
+    case 'pending': return '⏳';
+    case 'confirmed': return '✅';
+    case 'preparing': return '👨‍🍳';
+    case 'ready': return '🍽️';
+    case 'delivered': return '📦';
+    case 'cancelled': return '❌';
+    default: return '📋';
+  }
+}
+
+function getStatusText(status: string): string {
+  switch (status) {
+    case 'pending': return 'Order Received';
+    case 'confirmed': return 'Order Confirmed';
+    case 'preparing': return 'Being Prepared';
+    case 'ready': return 'Ready for Pickup';
+    case 'delivered': return 'Delivered';
+    case 'cancelled': return 'Cancelled';
+    default: return status;
+  }
+}
+
+// Order status update function
+export async function sendOrderStatusUpdate(chatId: string, orderNumber: string, status: string) {
+  try {
+    const statusEmoji = getStatusEmoji(status);
+    const statusText = getStatusText(status);
+    
+    let message = `${statusEmoji} Order Update!\n\n`;
+    message += `Order #${orderNumber}\n`;
+    message += `Status: ${statusText}\n\n`;
+    
+    if (status === 'confirmed') {
+      message += '🍳 Your order has been confirmed and we\'re preparing it now!';
+    } else if (status === 'preparing') {
+      message += '👨‍🍳 Our chefs are preparing your delicious meal!';
+    } else if (status === 'ready') {
+      message += '🍽️ Your order is ready! Come pick it up or delivery is on the way!';
+    } else if (status === 'delivered') {
+      message += '📦 Your order has been delivered! Enjoy your meal!';
+    }
+    
+    await bot.api.sendMessage(chatId, message);
+  } catch (error) {
+    console.error('Error sending status update:', error);
+  }
+}
 
 // Handle Web App data
 bot.on("message:web_app_data", async (ctx) => {

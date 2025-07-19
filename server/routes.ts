@@ -286,6 +286,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const order = await storage.createOrder(orderData, orderItems);
       
+      // Send notification to admin (you can implement webhook/email here)
+      console.log(`🔔 New order #${order.orderNumber} from Telegram user ${userId}`);
+      
       res.json({ 
         success: true, 
         order: { 
@@ -296,6 +299,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating Telegram order:", error);
       res.status(500).json({ message: "Failed to create order" });
+    }
+  });
+
+  // Update order status
+  app.patch('/api/orders/:id/status', isAuthenticated, async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!orderId || !status) {
+        return res.status(400).json({ message: "Order ID and status are required" });
+      }
+
+      const updatedOrder = await storage.updateOrderStatus(orderId, status);
+      
+      // Send notification to customer via Telegram if available
+      if (updatedOrder.telegramChatId) {
+        try {
+          const { sendOrderStatusUpdate } = await import('./telegram');
+          await sendOrderStatusUpdate(updatedOrder.telegramChatId, updatedOrder.orderNumber, status);
+          console.log(`📱 Order #${updatedOrder.orderNumber} status updated to: ${status}`);
+        } catch (error) {
+          console.error('Error sending Telegram notification:', error);
+        }
+      }
+      
+      res.json(updatedOrder);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      res.status(500).json({ message: "Failed to update order status" });
     }
   });
 
