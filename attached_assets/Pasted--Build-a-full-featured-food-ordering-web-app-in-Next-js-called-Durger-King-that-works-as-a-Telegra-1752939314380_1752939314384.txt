@@ -1,0 +1,100 @@
+ Build a full-featured food ordering web app in Next.js called "Durger King" that works as a Telegram Mini App for users and a separate secure admin dashboard for management.
+
+📱 Telegram Mini App (/mini)
+Built with Next.js + Tailwind CSS for Telegram-native mobile UX
+
+Responsive, animated, emoji-rich UI 🍔🥤🍟
+
+Auto-detect Telegram user with window.Telegram.WebApp.initDataUnsafe
+
+Features:
+
+Category filter: e.g. "Burgers", "Drinks", "Combos"
+
+Add/remove items with smooth animation (framer-motion or Tailwind transitions)
+
+Cart panel with slide-over, order summary, quantity editing
+
+Checkout with confirmation screen 🎉
+
+Dark/light mode theme detection via Telegram
+
+Mobile gesture-friendly (swipe to remove, pull to refresh)
+
+🛠 Backend API (under /api)
+Built with Next.js API Routes
+
+Endpoints:
+
+/api/menu: GET/POST/PUT/DELETE
+
+/api/categories: Manage food categories
+
+/api/orders: User submits orders; admin views them
+
+/api/auth/login: Admin login (JWT or cookie-based)
+
+/api/users: Telegram user tracking
+
+Use SQLite with Prisma or lowdb for Replit-safe storage
+
+Middleware to secure protected API routes
+
+🔐 Admin Dashboard (/admin)
+Login required to access
+
+Features:
+
+/admin/menu: Full CRUD UI for menu items (image upload, categories, price)
+
+/admin/categories: Create/edit food categories
+
+/admin/orders: View order history and filter by status (pending, cooking, completed)
+
+/admin/users: View registered Telegram users
+
+/admin/staff: Add/remove delivery & kitchen staff
+
+/admin/settings: Optional config (restaurant hours, banner)
+
+Built with:
+
+Tailwind CSS + @shadcn/ui or Chakra UI
+
+Components like: sidebar, modal, table, search, form validation
+
+Animated transitions (framer-motion or Headless UI)
+
+🧩 Folder Structure:
+bash
+Copy
+Edit
+/pages
+  /mini        → Telegram user interface
+  /admin       → Protected admin UI
+  /api         → Menu, auth, orders, categories, users
+/components     → Reusable UI
+/lib            → DB and auth helpers
+/styles         → Tailwind setup
+/public         → Images/icons
+🔐 Admin Auth Logic:
+Use JWT or HTTP-only cookie session
+
+Store credentials securely (admin@example.com / hashed pw)
+
+Protect /admin/* routes via middleware
+
+Session timeout, logout, and error feedback
+
+🔧 Deployment:
+Fully runnable on Replit (Free) using SQLite/lowdb
+
+Or deploy to Vercel for production
+
+📌 Bonus:
+
+Use Telegram Bot API to notify admin on new order via sendMessage
+
+Use framer-motion to animate cart, buttons, transitions
+
+Clean and modern layout with iconography and responsive design
